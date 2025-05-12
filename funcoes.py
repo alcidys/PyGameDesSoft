@@ -1,0 +1,1 @@
+#funcoes para o jogo
