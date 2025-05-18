@@ -19,8 +19,8 @@ VERMELHO = (255, 0, 0)
 VERDE = (0, 255, 0)
 CINZA = (200, 200, 200)
 PRETO = (0, 0, 0)
-AMARELO = (255, 255, 0)
-ROSA = (255, 105, 180)
+ROSA = (255, 100, 180)
+LARANJA = (255, 165, 0)
 
 # Jogador
 jogador = pygame.Rect(100, CHAO_Y - 50, 50, 50)
@@ -29,40 +29,42 @@ vel_y = 0
 gravidade = 1
 pulo = -18
 no_chao = True
+vidas = 5
 
-# Vida
-vida = 5
-MAX_VIDA = 5
+# Fonte
+fonte = pygame.font.SysFont(None, 40)
 
-# Tipos de obstáculo
-TIPOS_OBSTACULO = ["plataforma", "solido", "dano_bloco", "dano_plataforma"]
+# Obstáculos com tipos
 obstaculos = []
+obstaculos_dano_consecutivos = 0
+metade_mundo = LARGURA_MUNDO // 2
 
-for _ in range(100):
-    tipo = random.choice(TIPOS_OBSTACULO)
-    x = random.randint(300, 89800)
+for i in range(300):
+    x = random.randint(300, LARGURA_MUNDO - 300)
     largura = random.choice([50, 100, 150])
-    altura = 50
+    altura = random.randint(40, 100)
+
+    # Controle de dano até a metade do mundo
+    if x < metade_mundo:
+        if obstaculos_dano_consecutivos >= 2:
+            tipo = random.choice(["plataforma", "solido"])
+            obstaculos_dano_consecutivos = 0
+        else:
+            tipo = random.choice(["plataforma", "solido", "dano_bloco", "dano_plataforma"])
+            if tipo in ["dano_bloco", "dano_plataforma"]:
+                obstaculos_dano_consecutivos += 1
+            else:
+                obstaculos_dano_consecutivos = 0
+    else:
+        tipo = random.choice(["plataforma", "solido", "dano_bloco", "dano_plataforma"])
 
     if tipo in ["plataforma", "dano_plataforma"]:
-        y = CHAO_Y - random.randint(100, 200)
+        y = CHAO_Y - random.randint(100, 250)
     else:
         y = CHAO_Y - altura
 
-    obstaculos.append({
-        "rect": pygame.Rect(x, y, largura, altura),
-        "tipo": tipo
-    })
-
-# Pontuação
-pontuacao = 0
-fonte = pygame.font.SysFont(None, 40)
-
-# Função para desenhar barra de vida
-def desenha_barra_vida(tela, vida):
-    for i in range(MAX_VIDA):
-        cor = (255, 0, 0) if i < vida else (100, 100, 100)
-        pygame.draw.rect(tela, cor, (10 + i * 35, 50, 30, 30))
+    rect = pygame.Rect(x, y, largura, altura)
+    obstaculos.append({"rect": rect, "tipo": tipo, "causou_dano": False})
 
 # Loop principal
 camera_x = 0
@@ -100,33 +102,36 @@ while rodando:
         vel_y = 0
         no_chao = True
 
-    # Colisões com obstáculos
-    colidiu_com_sólido = False
+    # Colisão com obstáculos
     for obs in obstaculos:
         rect = obs["rect"]
         tipo = obs["tipo"]
 
         if jogador.colliderect(rect):
-            # Plataforma
-            if tipo in ["plataforma", "dano_plataforma"] and jogador.bottom <= rect.top + 10 and vel_y >= 0:
-                jogador.bottom = rect.top
-                vel_y = 0
-                no_chao = True
-                if tipo == "dano_plataforma":
-                    vida -= 1
-                continue
-
-            # Sólido
-            if tipo == "solido":
-                if jogador.right > rect.left and jogador.left < rect.left:
+            if tipo in ["plataforma", "dano_plataforma"]:
+                if vel_y > 0 and jogador.bottom <= rect.top + 20:
+                    jogador.bottom = rect.top
+                    vel_y = 0
+                    no_chao = True
+            elif tipo == "solido":
+                if vel_y > 0 and jogador.bottom <= rect.top + 20:
+                    jogador.bottom = rect.top
+                    vel_y = 0
+                    no_chao = True
+                elif vel_y < 0 and jogador.top >= rect.bottom - 20:
+                    jogador.top = rect.bottom
+                    vel_y = 0
+                elif jogador.right > rect.left and jogador.left < rect.left:
                     jogador.right = rect.left
                 elif jogador.left < rect.right and jogador.right > rect.right:
                     jogador.left = rect.right
-                colidiu_com_sólido = True
-
-            # Dano bloco
-            if tipo == "dano_bloco":
-                vida -= 1
+            elif tipo in ["dano_bloco", "dano_plataforma"]:
+                if not obs["causou_dano"]:
+                    vidas -= 1
+                    obs["causou_dano"] = True
+                    if vidas <= 0:
+                        print("Game Over")
+                        rodando = False
 
     # Câmera
     camera_x = jogador.x - LARGURA_TELA // 2
@@ -140,14 +145,17 @@ while rodando:
 
     # Desenhar obstáculos
     for obs in obstaculos:
+        cor = VERMELHO
+        if obs["tipo"] == "plataforma":
+            cor = PRETO
+        elif obs["tipo"] == "solido":
+            cor = CINZA
+        elif obs["tipo"] == "dano_bloco":
+            cor = LARANJA
+        elif obs["tipo"] == "dano_plataforma":
+            cor = ROSA
+
         rect = obs["rect"]
-        tipo = obs["tipo"]
-        cor = {
-            "plataforma": PRETO,
-            "solido": CINZA,
-            "dano_bloco": VERMELHO,
-            "dano_plataforma": ROSA
-        }[tipo]
         pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
 
     # Mostrar pontuação
@@ -156,15 +164,8 @@ while rodando:
     tela.blit(texto, (10, 10))
 
     # Mostrar barra de vida
-    desenha_barra_vida(tela, vida)
-
-    # Verifica fim de jogo
-    if vida <= 0:
-        texto_gameover = fonte.render("Game Over!", True, VERMELHO)
-        tela.blit(texto_gameover, (LARGURA_TELA // 2 - 80, ALTURA_TELA // 2))
-        pygame.display.flip()
-        pygame.time.delay(2000)
-        rodando = False
+    for i in range(vidas):
+        pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
 
     pygame.display.flip()
 
