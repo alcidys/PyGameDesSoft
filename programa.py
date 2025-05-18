@@ -31,6 +31,9 @@ pulo = -18
 no_chao = True
 vidas = 5
 
+personagem_img = pygame.image.load("assets/Herondina.png").convert_alpha()
+personagem_img = pygame.transform.scale(personagem_img, (75, 75))
+
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
 
@@ -44,7 +47,6 @@ for i in range(300):
     largura = random.choice([50, 100, 150])
     altura = random.randint(40, 100)
 
-    # Controle de dano até a metade do mundo
     if x < metade_mundo:
         if obstaculos_dano_consecutivos >= 2:
             tipo = random.choice(["plataforma", "solido"])
@@ -140,8 +142,8 @@ while rodando:
     # Desenhar chão
     pygame.draw.rect(tela, VERDE, (0 - camera_x, CHAO_Y, LARGURA_MUNDO, ALTURA_TELA - CHAO_Y))
 
-    # Desenhar jogador
-    pygame.draw.rect(tela, AZUL, (jogador.x - camera_x, jogador.y, jogador.width, jogador.height))
+    # Desenhar jogador (imagem)
+    tela.blit(personagem_img, (jogador.x - camera_x, jogador.y))
 
     # Desenhar obstáculos
     for obs in obstaculos:
@@ -149,11 +151,11 @@ while rodando:
         if obs["tipo"] == "plataforma":
             cor = PRETO
         elif obs["tipo"] == "solido":
-            cor = CINZA
+            cor = PRETO
         elif obs["tipo"] == "dano_bloco":
-            cor = LARANJA
+            cor = VERMELHO
         elif obs["tipo"] == "dano_plataforma":
-            cor = ROSA
+            cor = VERMELHO
 
         rect = obs["rect"]
         pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
