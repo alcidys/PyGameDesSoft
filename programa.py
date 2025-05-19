@@ -9,7 +9,7 @@ LARGURA_TELA, ALTURA_TELA = 800, 600
 LARGURA_MUNDO = 90000
 CHAO_Y = 500
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
-pygame.display.set_caption("Jogo Blocos Sólidos")
+pygame.display.set_caption("Pygame")
 clock = pygame.time.Clock()
 
 # Cores
@@ -45,6 +45,7 @@ for i in range(300):
     tipo = random.choice(["normal", "dano"])
     rect = pygame.Rect(x, y, largura, altura)
     obstaculos.append({"rect": rect, "tipo": tipo, "causou_dano": False})
+
 
 # Loop principal
 camera_x = 0
@@ -91,11 +92,11 @@ while rodando:
         if obs["tipo"] == "normal":
             if jogador.colliderect(rect):
                 if vel_y > 0 and jogador.bottom <= rect.top + vel_y:
-                    jogador.bottom = rect.top
+                    jogador.bottom = rect.top - 1
                     vel_y = 0
                     no_chao = True
-                elif vel_y < 0 and jogador.top >= rect.bottom - vel_y:
-                    jogador.top = rect.bottom
+                elif vel_y < 0 and jogador.top <= rect.bottom - vel_y:
+                    jogador.top = rect.bottom + 1
                     vel_y = 0
 
         # Dano com blocos vermelhos, mas sem bloqueio de movimento
