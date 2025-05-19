@@ -143,8 +143,14 @@ while rodando:
 
     # Reset de dano
     for obs in obstaculos:
-        if obs["tipo"] == "dano" and not jogador.colliderect(obs["rect"]):
+        if obs["tipo"] == "dano":
+            if jogador.colliderect(obs["rect"]):
+                if not obs["causou_dano"]:
+                    vidas -= 1
+                    obs["causou_dano"] = True
+        else:
             obs["causou_dano"] = False
+
 
     # Colisão com chão
     if jogador.bottom >= CHAO_Y:
