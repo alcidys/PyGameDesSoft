@@ -56,7 +56,8 @@ for i in range(300):
             if tipo in ["dano_bloco", "dano_plataforma"]:
                 obstaculos_dano_consecutivos += 1
             else:
-                obstaculos_dano_consecutivos = 0
+                pass
+            
     else:
         tipo = random.choice(["plataforma", "solido", "dano_bloco", "dano_plataforma"])
 
@@ -152,10 +153,6 @@ while rodando:
             cor = PRETO
         elif obs["tipo"] == "solido":
             cor = PRETO
-        elif obs["tipo"] == "dano_bloco":
-            cor = VERMELHO
-        elif obs["tipo"] == "dano_plataforma":
-            cor = VERMELHO
 
         rect = obs["rect"]
         pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
