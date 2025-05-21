@@ -8,6 +8,8 @@ pygame.init()
 LARGURA_TELA, ALTURA_TELA = 800, 600
 LARGURA_MUNDO = 90000
 CHAO_Y = 500
+ALTURA_CHAO = 100  # altura real da imagem do chão
+
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Plataforma")
 clock = pygame.time.Clock()
@@ -27,16 +29,68 @@ pulo = -18
 no_chao = True
 vidas = 5
 
-# Imagem do personagem
-try:
-    personagem_img = pygame.image.load("assets/Herondina.png").convert_alpha()
-    personagem_img = pygame.transform.scale(personagem_img, (50, 50))
-except:
-    personagem_img = pygame.Surface((50, 50))
-    personagem_img.fill((0, 0, 255))
-
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
+
+# Opções de personagens
+personagens_disponiveis = [
+    pygame.transform.scale(pygame.image.load("assets/Herondina.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Mariana.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Jarina.png").convert_alpha(), (50, 50)),
+]
+
+personagem_escolhido = None
+
+# Função para exibir a tela de seleção de personagem
+def tela_selecao_personagem():
+    global personagem_escolhido
+
+    selecionando = True
+    while selecionando:
+        tela.fill((30, 30, 30))
+        titulo = fonte.render("Escolha seu personagem", True, (255, 255, 255))
+        tela.blit(titulo, (LARGURA_TELA // 2 - titulo.get_width() // 2, 50))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif evento.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                for i in range(3):
+                    rect = pygame.Rect(200 + i * 150, 200, 50, 50)
+                    if rect.collidepoint(mx, my):
+                        personagem_escolhido = personagens_disponiveis[i]
+                        selecionando = False
+
+        for i, img in enumerate(personagens_disponiveis):
+            x = 200 + i * 150
+            tela.blit(img, (x, 200))
+            pygame.draw.rect(tela, (255, 255, 255), (x, 200, 50, 50), 2)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+# Chama a tela de seleção antes de começar
+tela_selecao_personagem()
+
+# Carregamento das imagens de fundo
+cenario0_img = pygame.transform.scale(pygame.image.load("assets/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario1_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 1.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario2_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 2.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario3_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 3.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario4_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 4.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+
+# Imagem do chão
+chao_img = pygame.transform.scale(pygame.image.load("assets/CHÃO.png").convert_alpha(), (LARGURA_TELA, ALTURA_CHAO))
+
+camadas = [
+    {"img": cenario0_img, "offset": 0, "vel": 0.2},
+    {"img": cenario1_img, "offset": 0, "vel": 0.4},
+    {"img": cenario2_img, "offset": 0, "vel": 0.6},
+    {"img": cenario3_img, "offset": 0, "vel": 0.8},
+    {"img": cenario4_img, "offset": 0, "vel": 1.0},
+]
 
 # Obstáculos
 obstaculos = []
@@ -44,29 +98,33 @@ espacamento_minimo = 50
 
 for i in range(300):
     tentativas = 0
-    colisao = True
-    
-    while colisao and tentativas < 100:
+    sucesso = False
+
+    while not sucesso and tentativas < 100:
         x = random.randint(300, LARGURA_MUNDO - 300)
         largura = random.choice([50, 100, 150])
         altura = 20
         y = random.randint(300, CHAO_Y - 40)
         tipo = random.choice(["normal", "dano"])
-        
+
         novo_rect = pygame.Rect(x, y, largura, altura)
-        novo_rect_inflado = novo_rect.inflate(espacamento_minimo, espacamento_minimo)
-        
-        colisao = False
+        distancia_minima = 30
+        sucesso = True
+
         for obs in obstaculos:
-            if novo_rect_inflado.colliderect(obs["rect"]):
-                colisao = True
+            distancia_horizontal = abs(novo_rect.centerx - obs["rect"].centerx)
+            distancia_vertical = abs(novo_rect.centery - obs["rect"].centery)
+            if distancia_horizontal < (largura // 2 + obs["rect"].width // 2 + distancia_minima) and \
+               distancia_vertical < 40:
+                sucesso = False
                 break
-            if tipo == "dano":
-                colisao = False
-                
+
+        if tipo == "dano":
+            sucesso = True
+
         tentativas += 1
-    
-    if not colisao:
+
+    if sucesso:
         obstaculos.append({"rect": novo_rect, "tipo": tipo, "causou_dano": False})
 
 # Loop principal
@@ -74,7 +132,23 @@ camera_x = 0
 rodando = True
 while rodando:
     dt = clock.tick(60)
-    tela.fill(CINZA)
+    tela.fill((0, 0, 0))
+
+    # Atualiza offsets (paralaxe)
+    for camada in camadas:
+        camada["offset"] -= camada["vel"]
+        camada["vel"] += 0.0002
+
+    # Desenha fundos com paralaxe
+    for camada in camadas:
+        largura_img = camada["img"].get_width()
+        x = camada["offset"] % largura_img
+        for i in range(-1, LARGURA_TELA // largura_img + 2):
+            tela.blit(camada["img"], (x + i * largura_img, 0))
+
+    # Chão
+    for x in range(0, LARGURA_MUNDO, LARGURA_TELA):
+        tela.blit(chao_img, (x - camera_x, CHAO_Y))
 
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
@@ -91,50 +165,44 @@ while rodando:
         vel_y = pulo
         no_chao = False
 
-    # Movimento horizontal
     jogador.x += vel_x
-    
-    # Colisão horizontal primeiro
+
+    # Colisão horizontal
     for obs in obstaculos:
         rect = obs["rect"]
         if obs["tipo"] == "normal" and jogador.colliderect(rect):
-            if vel_x > 0:  # Movendo para direita
+            if vel_x > 0:
                 jogador.right = rect.left
-            elif vel_x < 0:  # Movendo para esquerda
+            elif vel_x < 0:
                 jogador.left = rect.right
 
-    # Aplicar gravidade
+    # Gravidade
     vel_y += gravidade
     jogador.y += vel_y
     no_chao = False
 
-    # Colisão vertical (mais precisa)
+    # Colisão vertical
     for obs in obstaculos:
         rect = obs["rect"]
-        
         if jogador.colliderect(rect):
-            # Calcula as áreas de sobreposição
             overlap_left = jogador.right - rect.left
             overlap_right = rect.right - jogador.left
             overlap_top = jogador.bottom - rect.top
             overlap_bottom = rect.bottom - jogador.top
-            
-            # Determina qual é a menor sobreposição
             min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
-            
-            if min_overlap == overlap_top:  # Colisão por cima
+
+            if min_overlap == overlap_top:
                 jogador.bottom = rect.top
                 vel_y = 0
                 no_chao = True
-            elif min_overlap == overlap_bottom:  # Colisão por baixo
+            elif min_overlap == overlap_bottom:
                 jogador.top = rect.bottom
                 vel_y = 0
-            elif min_overlap == overlap_left:  # Colisão pela esquerda
+            elif min_overlap == overlap_left:
                 jogador.right = rect.left
-            elif min_overlap == overlap_right:  # Colisão pela direita
+            elif min_overlap == overlap_right:
                 jogador.left = rect.right
 
-            # Dano se for bloco de dano
             if obs["tipo"] == "dano" and not obs["causou_dano"]:
                 vidas -= 1
                 obs["causou_dano"] = True
@@ -151,8 +219,6 @@ while rodando:
         else:
             obs["causou_dano"] = False
 
-
-    # Colisão com chão
     if jogador.bottom >= CHAO_Y:
         jogador.bottom = CHAO_Y
         vel_y = 0
@@ -162,10 +228,11 @@ while rodando:
     camera_x = jogador.x - LARGURA_TELA // 2
     camera_x = max(0, min(camera_x, LARGURA_MUNDO - LARGURA_TELA))
 
-    # Desenhar
-    pygame.draw.rect(tela, VERDE, (0 - camera_x, CHAO_Y, LARGURA_MUNDO, ALTURA_TELA - CHAO_Y))
-    tela.blit(personagem_img, (jogador.x - camera_x, jogador.y))
-    
+    # Personagem
+    if personagem_escolhido:
+        tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.y))
+
+    # Obstáculos
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
