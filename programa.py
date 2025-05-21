@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+from random import randint
 
 pygame.init()
 
@@ -28,6 +29,7 @@ gravidade = 1
 pulo = -18
 no_chao = True
 vidas = 5
+cristais_coletados = 0
 
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
@@ -39,6 +41,13 @@ personagens_disponiveis = [
     pygame.transform.scale(pygame.image.load("assets/Jarina.png").convert_alpha(), (50, 50)),
 ]
 
+cristal = [
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50,50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50,50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_01_green.png').convert_alpha(), (50,50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_04_blue.png').convert_alpha(), (50,50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50,50)),
+]
 personagem_escolhido = None
 
 # Função para exibir a tela de seleção de personagem
@@ -125,7 +134,9 @@ for i in range(300):
         tentativas += 1
 
     if sucesso:
-        obstaculos.append({"rect": novo_rect, "tipo": tipo, "causou_dano": False})
+        cristal_id = randint(0, 4) if tipo == "normal" else None
+        obstaculos.append({"rect": novo_rect,"tipo": tipo,"causou_dano": False,"cristal": cristal_id, "coletado": False})
+
 
 # Loop principal
 camera_x = 0
@@ -232,17 +243,31 @@ while rodando:
     if personagem_escolhido:
         tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.y))
 
+    amarelo = (0,255,255)
     # Obstáculos
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
             cor = VERMELHO if obs["tipo"] == "dano" else PRETO
             pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
+            # Coleta de cristais
+            for obs in obstaculos:
+                if obs["tipo"] == "normal" and not obs["coletado"] and obs["cristal"] is not None:
+                    cristal_id = pygame.Rect(obs["rect"].x + obs["rect"].width // 2 - 25, obs["rect"].y - 50, 50, 50)
+                if jogador.colliderect(cristal_id):
+                    obs["coletado"] = True
+                    cristais_coletados += 1
+            if cor == PRETO and obs["cristal"] is not None and not obs["coletado"]:
+                tela.blit(cristal[obs["cristal"]],(rect.x - camera_x + rect.width // 2 - 25, rect.y - 50))
+
 
     # UI
     pontuacao = jogador.x // 10
     texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
     tela.blit(texto, (10, 10))
+    texto_cristais = fonte.render(f"Cristais: {cristais_coletados}", True, (0, 100, 255))
+    tela.blit(texto_cristais, (10, 80))
+
 
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
