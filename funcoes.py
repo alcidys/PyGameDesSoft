@@ -28,7 +28,8 @@ class Player(pygame.sprite.Sprite):
             'idle': load_spritesheet("assets/Soldier_1/Idle.png", 7),   # Corrigido: 7 quadros
             'run': load_spritesheet("assets/Soldier_1/Run.png", 8),
             'hurt': load_spritesheet("assets/Soldier_1/Hurt.png", 3),
-            'dead': load_spritesheet("assets/Soldier_1/Dead.png", 4)
+            'dead': load_spritesheet("assets/Soldier_1/Dead.png", 4),
+            'shot': load_spritesheet("assets/Soldier_1/Shot_2.png", 4)
         }
         self.state = 'idle'
         self.frame_index = 0
@@ -55,6 +56,8 @@ class Player(pygame.sprite.Sprite):
             self.state = 'hurt'
         elif keys[pygame.K_d]:
             self.state = 'dead'
+        elif keys[pygame.K_s]:
+            self.state = 'shot'
 
         # Se mudou de estado, reseta o índice
         if self.state != prev_state:

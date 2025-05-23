@@ -29,7 +29,7 @@ gravidade = 1
 pulo = -18
 no_chao = True
 vidas = 5
-ganhou_vida = False
+vidas_extra_por_cristais = 0
 cristais_coletados = 0
 
 # Fonte
@@ -39,7 +39,7 @@ fonte = pygame.font.SysFont(None, 40)
 personagens_disponiveis = [
     pygame.transform.scale(pygame.image.load("assets/Herondina.png").convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load("assets/Mariana.png").convert_alpha(), (50, 50)),
-    pygame.transform.scale(pygame.image.load("assets/Jarina.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Soldier_1/Attack.png").convert_alpha(), (50, 50)),
 ]
 
 cristal = [
@@ -220,11 +220,11 @@ while rodando:
                 if jogador.colliderect(cristal_rect):
                     obs["coletado"] = True
                     cristais_coletados += 1
-                if cristais_coletados%10 == 0 and cristais_coletados != 0 and ganhou_vida == False:
-                    vidas+=1
-                    ganhou_vida = True
-                else:
-                    ganhou_vida = False
+                vidas_esperadas = cristais_coletados // 10
+                if vidas_esperadas > vidas_extra_por_cristais:
+                    vidas += vidas_esperadas - vidas_extra_por_cristais
+                    vidas_extra_por_cristais = vidas_esperadas
+
 
     pontuacao = jogador.x // 10
     texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
