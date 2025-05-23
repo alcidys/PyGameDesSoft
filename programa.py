@@ -29,72 +29,36 @@ gravidade = 1
 pulo = -18
 no_chao = True
 vidas = 5
+ganhou_vida = False
 cristais_coletados = 0
 
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
 
-# Classe de Personagem Animado
-class PersonagemAnimado(pygame.sprite.Sprite):
-    def __init__(self, caminho_spritesheet, num_frames, frame_height, escala=1.5):
-        super().__init__()
-        self.frames = []
-        self.index = 0
-        self.timer = 0
-        self.escala = escala
-
-        spritesheet = pygame.image.load(caminho_spritesheet).convert_alpha()
-        frame_width = spritesheet.get_width() // num_frames
-
-        for i in range(num_frames):
-            frame = spritesheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
-            frame = pygame.transform.scale(frame, (frame_width * escala, frame_height * escala))
-            self.frames.append(frame)
-
-        self.image = self.frames[self.index]
-        self.rect = self.image.get_rect()
-
-    def update(self, x, y):
-        self.timer += 1
-        if self.timer >= 7:
-            self.index = (self.index + 1) % len(self.frames)
-            self.image = self.frames[self.index]
-            self.timer = 0
-        self.rect.midbottom = (x, y)
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
 # Personagens
-cavaleiro = PersonagemAnimado("assets/Knight_2/Run.png", 7, 128, 1.5)
-samurai = PersonagemAnimado("assets/Samurai_Archer/Run.png", 8, 128, 1.5)
+personagens_disponiveis = [
+    pygame.transform.scale(pygame.image.load("assets/Herondina.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Mariana.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Jarina.png").convert_alpha(), (50, 50)),
+]
 
-personagens_disponiveis = [cavaleiro, samurai]
-personagem_escolhido = None
-
-# Cristais
 cristal = [
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_01_green.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_04_blue.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_01_green.png').convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_04_blue.png').convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
 ]
-
-# Blocos
-
-contato_img = pygame.transform.scale(pygame.image.load("assets/bloco_contato.png").convert_alpha(), (100, 20))
-dano_img = pygame.transform.scale(pygame.image.load("assets/bloco_dano.png").convert_alpha(), (100, 20))
+personagem_escolhido = None
 
 def tela_selecao_personagem():
     global personagem_escolhido
     selecionando = True
-
-    botoes = [
-        {"pos": (200, 300, 50, 50), "cor": (255, 0, 0), "personagem": personagens_disponiveis[1]},
-        {"pos": (350, 300, 50, 50), "cor": (255, 255, 0), "personagem": personagens_disponiveis[0]},
-    ]
-
     while selecionando:
         tela.fill((30, 30, 30))
         titulo = fonte.render("Escolha seu personagem", True, (255, 255, 255))
@@ -106,34 +70,37 @@ def tela_selecao_personagem():
                 sys.exit()
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
-                for botao in botoes:
-                    rect = pygame.Rect(botao["pos"])
+                for i in range(3):
+                    rect = pygame.Rect(200 + i * 150, 200, 50, 50)
                     if rect.collidepoint(mx, my):
-                        personagem_escolhido = botao["personagem"]
+                        personagem_escolhido = personagens_disponiveis[i]
                         selecionando = False
 
-        personagens_disponiveis[0].update(350, 200)
-        personagens_disponiveis[1].update(200, 200)
-        personagens_disponiveis[0].draw(tela)
-        personagens_disponiveis[1].draw(tela)
-
-        for botao in botoes:
-            pygame.draw.rect(tela, botao["cor"], botao["pos"])
+        for i, img in enumerate(personagens_disponiveis):
+            x = 200 + i * 150
+            tela.blit(img, (x, 200))
+            pygame.draw.rect(tela, (255, 255, 255), (x, 200, 50, 50), 2)
 
         pygame.display.flip()
         clock.tick(60)
 
-cenario_imgs = [
-    pygame.transform.scale(pygame.image.load(f"assets/FUNDO {i}.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-    for i in range(1, 5)
-]
+tela_selecao_personagem()
+
 cenario0_img = pygame.transform.scale(pygame.image.load("assets/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario1_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 1.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario2_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 2.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario3_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 3.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario4_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 4.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+
 chao_img = pygame.transform.scale(pygame.image.load("assets/CHÃO.png").convert_alpha(), (LARGURA_TELA, ALTURA_CHAO))
 
-camadas = [{"img": cenario0_img, "offset": 0, "vel": 0.2}]
-camadas += [{"img": cenario_imgs[i], "offset": 0, "vel": 0.4 + 0.2 * i} for i in range(4)]
-
-PRETO
+camadas = [
+    {"img": cenario0_img, "offset": 0, "vel": 0.2},
+    {"img": cenario1_img, "offset": 0, "vel": 0.4},
+    {"img": cenario2_img, "offset": 0, "vel": 0.6},
+    {"img": cenario3_img, "offset": 0, "vel": 0.8},
+    {"img": cenario4_img, "offset": 0, "vel": 1.0},
+]
 
 obstaculos = []
 for i in range(300):
@@ -141,19 +108,16 @@ for i in range(300):
     sucesso = False
     while not sucesso and tentativas < 100:
         x = random.randint(300, LARGURA_MUNDO - 300)
-        largura = 100
+        largura = random.choice([50, 100, 150])
         altura = 20
         y = random.randint(300, CHAO_Y - 40)
         tipo = random.choice(["normal", "dano"])
         novo_rect = pygame.Rect(x, y, largura, altura)
         sucesso = True
         for obs in obstaculos:
-            distancia_horizontal = abs(novo_rect.centerx - obs["rect"].centerx)
-            distancia_vertical = abs(novo_rect.centery - obs["rect"].centery)
-            if distancia_horizontal < 50 and distancia_vertical < 20:
+            if novo_rect.colliderect(obs["rect"]):
                 sucesso = False
                 break
-
         if tipo == "dano":
             sucesso = True
         tentativas += 1
@@ -162,9 +126,7 @@ for i in range(300):
         obstaculos.append({"rect": novo_rect, "tipo": tipo, "causou_dano": False, "cristal": cristal_id, "coletado": False})
 
 camera_x = 0
-tela_selecao_personagem()
 rodando = True
-
 while rodando:
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
@@ -200,13 +162,11 @@ while rodando:
 
     for obs in obstaculos:
         rect = obs["rect"]
-        if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
-            imagem = dano_img if obs["tipo"] == "dano" else contato_img
-            tela.blit(imagem, (rect.x - camera_x, rect.y))
-            
-            if obs["tipo"] == "normal" and obs["cristal"] is not None and not obs["coletado"]:
-                tela.blit(cristal[obs["cristal"]], (rect.x - camera_x + rect.width // 2 - 25, rect.y - 50))
-
+        if obs["tipo"] == "normal" and jogador.colliderect(rect):
+            if vel_x > 0:
+                jogador.right = rect.left
+            elif vel_x < 0:
+                jogador.left = rect.right
 
     vel_y += gravidade
     jogador.y += vel_y
@@ -215,37 +175,27 @@ while rodando:
     for obs in obstaculos:
         rect = obs["rect"]
         if jogador.colliderect(rect):
-            overlap_left = jogador.right - rect.left
-            overlap_right = rect.right - jogador.left
-            overlap_top = jogador.bottom - rect.top
-            overlap_bottom = rect.bottom - jogador.top
-            min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
-
-            if min_overlap == overlap_top:
+            # Tratamento de colisão vertical
+            if jogador.bottom <= rect.top + 20:
                 jogador.bottom = rect.top
                 vel_y = 0
                 no_chao = True
-            elif min_overlap == overlap_bottom:
+            elif jogador.top >= rect.bottom - 20:
                 jogador.top = rect.bottom
                 vel_y = 0
-            elif min_overlap == overlap_left:
-                jogador.right = rect.left
-            elif min_overlap == overlap_right:
-                jogador.left = rect.right
 
-            if obs["tipo"] == "dano" and not obs["causou_dano"]:
-                vidas -= 1
-                obs["causou_dano"] = True
-                if vidas <= 0:
-                    rodando = False
-
-    for obs in obstaculos:
-        if obs["tipo"] == "dano" and jogador.colliderect(obs["rect"]):
-            if not obs["causou_dano"]:
-                vidas -= 1
-                obs["causou_dano"] = True
+            # Dano ocorre só uma vez por contato
+            if obs["tipo"] == "dano":
+                if not obs["causou_dano"]:
+                    vidas -= 1
+                    obs["causou_dano"] = True
+                    if vidas <= 0:
+                        rodando = False
         else:
-            obs["causou_dano"] = False
+            # Reseta para poder causar dano novamente na próxima colisão
+            if obs["tipo"] == "dano":
+                obs["causou_dano"] = False
+
 
     if jogador.bottom >= CHAO_Y:
         jogador.bottom = CHAO_Y
@@ -256,12 +206,32 @@ while rodando:
     camera_x = max(0, min(camera_x, LARGURA_MUNDO - LARGURA_TELA))
 
     if personagem_escolhido:
-        personagem_escolhido.update(jogador.x - camera_x, jogador.y)
-        personagem_escolhido.draw(tela)
+        tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.bottom - personagem_escolhido.get_height()))
+
+    for obs in obstaculos:
+        rect = obs["rect"]
+        if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
+            cor = VERMELHO if obs["tipo"] == "dano" else PRETO
+            pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
+
+            if obs["tipo"] == "normal" and obs["cristal"] is not None and not obs["coletado"]:
+                cristal_rect = pygame.Rect(rect.x + rect.width // 2 - 25, rect.y - 50, 50, 50)
+                tela.blit(cristal[obs["cristal"]], (cristal_rect.x - camera_x, cristal_rect.y))
+                if jogador.colliderect(cristal_rect):
+                    obs["coletado"] = True
+                    cristais_coletados += 1
+                if cristais_coletados%10 == 0 and cristais_coletados != 0 and ganhou_vida == False:
+                    vidas+=1
+                    ganhou_vida = True
+                else:
+                    ganhou_vida = False
 
     pontuacao = jogador.x // 10
-    tela.blit(fonte.render(f"Pontuação: {pontuacao}", True, PRETO), (10, 10))
-    tela.blit(fonte.render(f"Cristais: {cristais_coletados}", True, (0, 100, 255)), (10, 80))
+    texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
+    tela.blit(texto, (10, 10))
+    texto_cristais = fonte.render(f"Cristais: {cristais_coletados}", True, (0, 100, 255))
+    tela.blit(texto_cristais, (10, 80))
+
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
 
