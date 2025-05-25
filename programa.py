@@ -11,6 +11,18 @@ LARGURA_MUNDO = 90000
 CHAO_Y = 500
 ALTURA_CHAO = 100
 
+def load_spritesheet(path, frame_count, scale=2):
+    sheet = pygame.image.load(path).convert_alpha()
+    frame_width = sheet.get_width() // frame_count
+    frame_height = sheet.get_height()
+    frames = []
+    for i in range(frame_count):
+        frame = sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+        frame = pygame.transform.scale(frame, (frame_width * scale, frame_height * scale))
+        frames.append(frame)
+    return frames
+
+
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Plataforma")
 clock = pygame.time.Clock()
@@ -22,7 +34,90 @@ PRETO = (0, 0, 0)
 VERMELHO = (255, 0, 0)
 
 # Jogador
-jogador = pygame.Rect(100, CHAO_Y - 50, 50, 50)
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.animations = {
+            'idle': load_spritesheet("assets/Soldier_1/Idle.png", 7),
+            'run': load_spritesheet("assets/Soldier_1/Run.png", 8),
+            'hurt': load_spritesheet("assets/Soldier_1/Hurt.png", 3),
+            'dead': load_spritesheet("assets/Soldier_1/Dead.png", 4),
+            'shot': load_spritesheet("assets/Soldier_1/Shot_2.png", 4)
+        }
+        self.state = 'idle'
+        self.frame_index = 0
+        self.image = self.animations[self.state][self.frame_index]
+        self.rect = self.image.get_rect(midbottom=(x, y))
+        self.vel_y = 0
+        self.flipped = False
+        self.animation_timer = 0
+        self.animation_delay = 100
+        self.speed = 7
+        self.no_chao = False
+
+    def update(self, keys, dt, chao_y, obstaculos):
+        self.state = 'idle'
+        dx = 0
+
+        if keys[pygame.K_RIGHT]:
+            dx = self.speed
+            self.state = 'run'
+            self.flipped = False
+        elif keys[pygame.K_LEFT]:
+            dx = -self.speed
+            self.state = 'run'
+            self.flipped = True
+
+        if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and self.no_chao:
+            self.vel_y = -18
+            self.no_chao = False
+
+        # Movimento horizontal
+        self.rect.x += dx
+        for obs in obstaculos:
+            rect = obs["rect"]
+            if rect.colliderect(self.rect):
+                if dx > 0:
+                    self.rect.right = rect.left
+                elif dx < 0:
+                    self.rect.left = rect.right
+
+        # Gravidade e movimento vertical
+        self.vel_y += 1
+        self.rect.y += self.vel_y
+        self.no_chao = False
+
+        for obs in obstaculos:
+            rect = obs["rect"]
+            if self.rect.colliderect(rect):
+                if self.rect.bottom <= rect.top + 20:
+                    self.rect.bottom = rect.top
+                    self.vel_y = 0
+                    self.no_chao = True
+                elif self.rect.top >= rect.bottom - 20:
+                    self.rect.top = rect.bottom
+                    self.vel_y = 0
+
+        if self.rect.bottom >= chao_y:
+            self.rect.bottom = chao_y
+            self.vel_y = 0
+            self.no_chao = True
+
+        # Animação
+        self.animation_timer += dt
+        if self.animation_timer >= self.animation_delay:
+            self.frame_index += 1
+            if self.frame_index >= len(self.animations[self.state]):
+                self.frame_index = 0 if self.state != 'dead' else len(self.animations['dead']) - 1
+            self.animation_timer = 0
+
+        frame = self.animations[self.state][self.frame_index]
+        self.image = pygame.transform.flip(frame, self.flipped, False)
+        bottom = self.rect.bottom
+        self.rect = self.image.get_rect()
+        self.rect.bottom = bottom
+
+player = Player(100, CHAO_Y)
 vel_x = 0
 vel_y = 0
 gravidade = 1
@@ -31,6 +126,8 @@ no_chao = True
 vidas = 5
 vidas_extra_por_cristais = 0
 cristais_coletados = 0
+grupo_jogador = pygame.sprite.Group(player)
+
 
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
@@ -55,6 +152,7 @@ cristal = [
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
 ]
 personagem_escolhido = None
+
 
 def tela_selecao_personagem():
     global personagem_escolhido
@@ -148,40 +246,33 @@ while rodando:
         if evento.type == pygame.QUIT:
             rodando = False
 
-    teclas = pygame.key.get_pressed()
-    vel_x = 0
-    if teclas[pygame.K_LEFT]:
-        vel_x = -7
-    if teclas[pygame.K_RIGHT]:
-        vel_x = 7
-    if (teclas[pygame.K_SPACE] or teclas[pygame.K_UP]) and no_chao:
-        vel_y = pulo
-        no_chao = False
+    keys = pygame.key.get_pressed()
+    player.update(keys, dt, CHAO_Y, obstaculos)
 
-    jogador.x += vel_x
+
+    player.rect.x += vel_x
 
     for obs in obstaculos:
         rect = obs["rect"]
-        if obs["tipo"] == "normal" and jogador.colliderect(rect):
+        if obs["tipo"] == "normal" and player.rect.colliderect(rect):
             if vel_x > 0:
-                jogador.right = rect.left
+                player.rect.right = rect.left
             elif vel_x < 0:
-                jogador.left = rect.right
+                player.rect.left = rect.right
 
-    vel_y += gravidade
-    jogador.y += vel_y
+
     no_chao = False
 
     for obs in obstaculos:
         rect = obs["rect"]
-        if jogador.colliderect(rect):
+        if player.rect.colliderect(rect):
             # Tratamento de colisão vertical
-            if jogador.bottom <= rect.top + 20:
-                jogador.bottom = rect.top
+            if player.rect.bottom <= rect.top + 20:
+                player.rect.bottom = rect.top
                 vel_y = 0
                 no_chao = True
-            elif jogador.top >= rect.bottom - 20:
-                jogador.top = rect.bottom
+            elif player.rect.top >= rect.bottom - 20:
+                player.rect.top = rect.bottom
                 vel_y = 0
 
             # Dano ocorre só uma vez por contato
@@ -197,16 +288,19 @@ while rodando:
                 obs["causou_dano"] = False
 
 
-    if jogador.bottom >= CHAO_Y:
-        jogador.bottom = CHAO_Y
-        vel_y = 0
-        no_chao = True
 
-    camera_x = jogador.x - LARGURA_TELA // 2
+    camera_x = player.rect.x - LARGURA_TELA // 2
     camera_x = max(0, min(camera_x, LARGURA_MUNDO - LARGURA_TELA))
 
     if personagem_escolhido:
-        tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.bottom - personagem_escolhido.get_height()))
+        for sprite in grupo_jogador:
+            sprite.rect.x -= camera_x  # aplicar câmera
+
+        grupo_jogador.draw(tela)
+
+        for sprite in grupo_jogador:
+            sprite.rect.x += camera_x  # desfaz o ajuste da câmera
+
 
     for obs in obstaculos:
         rect = obs["rect"]
@@ -217,7 +311,7 @@ while rodando:
             if obs["tipo"] == "normal" and obs["cristal"] is not None and not obs["coletado"]:
                 cristal_rect = pygame.Rect(rect.x + rect.width // 2 - 25, rect.y - 50, 50, 50)
                 tela.blit(cristal[obs["cristal"]], (cristal_rect.x - camera_x, cristal_rect.y))
-                if jogador.colliderect(cristal_rect):
+                if player.rect.colliderect(cristal_rect):
                     obs["coletado"] = True
                     cristais_coletados += 1
                 vidas_esperadas = cristais_coletados // 10
@@ -226,7 +320,7 @@ while rodando:
                     vidas_extra_por_cristais = vidas_esperadas
 
 
-    pontuacao = jogador.x // 10
+    pontuacao = player.rect.x // 10
     texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
     tela.blit(texto, (10, 10))
     texto_cristais = fonte.render(f"Cristais: {cristais_coletados}", True, (0, 100, 255))
