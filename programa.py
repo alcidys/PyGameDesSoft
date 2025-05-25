@@ -29,7 +29,9 @@ gravidade = 1
 pulo = -18
 no_chao = True
 vidas = 5
+djumps = 0
 vidas_extra_por_cristais = 0
+djumps_por_cristais = 0
 cristais_coletados = 0
 
 # Fonte
@@ -41,7 +43,7 @@ personagens_disponiveis = [
     pygame.transform.scale(pygame.image.load("assets/Mariana.png").convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load("assets/Soldier_1/Attack.png").convert_alpha(), (50, 50)),
 ]
-
+#carrega os cristais que seram gerados
 cristal = [
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
@@ -56,6 +58,7 @@ cristal = [
 ]
 personagem_escolhido = None
 
+#defina a função para criar a tela de seleção
 def tela_selecao_personagem():
     global personagem_escolhido
     selecionando = True
@@ -83,17 +86,17 @@ def tela_selecao_personagem():
 
         pygame.display.flip()
         clock.tick(60)
-
+#cria a tela de seleção
 tela_selecao_personagem()
 
+#carrega os sprites do plano de fundo e do chão
 cenario0_img = pygame.transform.scale(pygame.image.load("assets/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
 cenario1_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 1.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
 cenario2_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 2.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
 cenario3_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 3.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
 cenario4_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 4.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-
 chao_img = pygame.transform.scale(pygame.image.load("assets/CHÃO.png").convert_alpha(), (LARGURA_TELA, ALTURA_CHAO))
-
+#separa os sprites do cenario para animação do background
 camadas = [
     {"img": cenario0_img, "offset": 0, "vel": 0.2},
     {"img": cenario1_img, "offset": 0, "vel": 0.4},
@@ -101,7 +104,7 @@ camadas = [
     {"img": cenario3_img, "offset": 0, "vel": 0.8},
     {"img": cenario4_img, "offset": 0, "vel": 1.0},
 ]
-
+#cria os obstaculos
 obstaculos = []
 for i in range(300):
     tentativas = 0
@@ -125,41 +128,48 @@ for i in range(300):
         cristal_id = randint(0, 4) if tipo == "normal" else None
         obstaculos.append({"rect": novo_rect, "tipo": tipo, "causou_dano": False, "cristal": cristal_id, "coletado": False})
 
+#set da camera e condição para rodar o jogo
 camera_x = 0
 rodando = True
+#loop principal que roda o jogo
 while rodando:
+    #set no clock para 60FPS
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
-
+    #cria o fundo com animação e o chão
     for camada in camadas:
         camada["offset"] -= camada["vel"]
         camada["vel"] += 0.0002
-
     for camada in camadas:
         largura_img = camada["img"].get_width()
         x = camada["offset"] % largura_img
         for i in range(-1, LARGURA_TELA // largura_img + 2):
             tela.blit(camada["img"], (x + i * largura_img, 0))
-
     for x in range(0, LARGURA_MUNDO, LARGURA_TELA):
         tela.blit(chao_img, (x - camera_x, CHAO_Y))
+
 
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             rodando = False
 
+    #leitura de comando e consequencias
     teclas = pygame.key.get_pressed()
     vel_x = 0
     if teclas[pygame.K_LEFT]:
         vel_x = -7
     if teclas[pygame.K_RIGHT]:
         vel_x = 7
-    if (teclas[pygame.K_SPACE] or teclas[pygame.K_UP]) and no_chao:
-        vel_y = pulo
+    if (teclas[pygame.K_SPACE] or teclas[pygame.K_UP]):
+        if no_chao == True:
+            vel_y = pulo
+        if no_chao == False and djumps>0:
+            no_chao = True
+            vel_y = pulo
+            djumps-=1
         no_chao = False
-
     jogador.x += vel_x
-
+    #define o tipo do cristal gerado
     for obs in obstaculos:
         rect = obs["rect"]
         if obs["tipo"] == "normal" and jogador.colliderect(rect):
@@ -167,11 +177,12 @@ while rodando:
                 jogador.right = rect.left
             elif vel_x < 0:
                 jogador.left = rect.right
-
+    #Graviodade e verificação se o jogador pode pular ou não
     vel_y += gravidade
     jogador.y += vel_y
     no_chao = False
 
+    #tratamento de colisão
     for obs in obstaculos:
         rect = obs["rect"]
         if jogador.colliderect(rect):
@@ -205,9 +216,11 @@ while rodando:
     camera_x = jogador.x - LARGURA_TELA // 2
     camera_x = max(0, min(camera_x, LARGURA_MUNDO - LARGURA_TELA))
 
+    #'desenha' o personagem escolhido na tela
     if personagem_escolhido:
         tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.bottom - personagem_escolhido.get_height()))
 
+    #gera os obstaculos conforme a posição do jogador
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
@@ -224,18 +237,22 @@ while rodando:
                 if vidas_esperadas > vidas_extra_por_cristais:
                     vidas += vidas_esperadas - vidas_extra_por_cristais
                     vidas_extra_por_cristais = vidas_esperadas
+                djumps_esperados = cristais_coletados//5
+                if djumps_esperados > djumps_por_cristais:
+                    djumps += djumps_esperados - djumps_por_cristais
+                    djumps_por_cristais = djumps_esperados
 
-
+    #'desenha o HUD na tela
     pontuacao = jogador.x // 10
     texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
     tela.blit(texto, (10, 10))
     texto_cristais = fonte.render(f"Cristais: {cristais_coletados}", True, (0, 100, 255))
     tela.blit(texto_cristais, (10, 80))
-
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
 
     pygame.display.flip()
 
+#encerra o jogo
 pygame.quit()
 sys.exit()
