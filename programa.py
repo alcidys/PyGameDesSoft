@@ -4,6 +4,7 @@ import random
 from random import randint
 
 pygame.init()
+pygame.mixer.init()
 
 # Configurações
 LARGURA_TELA, ALTURA_TELA = 800, 600
@@ -26,7 +27,7 @@ jogador = pygame.Rect(100, CHAO_Y - 50, 50, 50)
 vel_x = 0
 vel_y = 0
 gravidade = 1
-pulo = -18
+pulo = -20
 no_chao = True
 vidas = 5
 djumps = 0
@@ -152,6 +153,15 @@ while rodando:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             rodando = False
+        if evento.type == pygame.KEYDOWN:
+            if (evento.key == pygame.K_SPACE or evento.key == pygame.K_UP):
+                if no_chao == True:
+                    vel_y = pulo
+                if no_chao == False and djumps>0:
+                    vel_y = pulo
+                    djumps-=1
+                    cristais_coletados-=1
+                no_chao = False
 
     #leitura de comando e consequencias
     teclas = pygame.key.get_pressed()
@@ -160,14 +170,7 @@ while rodando:
         vel_x = -7
     if teclas[pygame.K_RIGHT]:
         vel_x = 7
-    if (teclas[pygame.K_SPACE] or teclas[pygame.K_UP]):
-        if no_chao == True:
-            vel_y = pulo
-        if no_chao == False and djumps>0:
-            no_chao = True
-            vel_y = pulo
-            djumps-=1
-        no_chao = False
+    
     jogador.x += vel_x
     #define o tipo do cristal gerado
     for obs in obstaculos:
@@ -237,7 +240,7 @@ while rodando:
                 if vidas_esperadas > vidas_extra_por_cristais:
                     vidas += vidas_esperadas - vidas_extra_por_cristais
                     vidas_extra_por_cristais = vidas_esperadas
-                djumps_esperados = cristais_coletados//5
+                djumps_esperados = cristais_coletados//1
                 if djumps_esperados > djumps_por_cristais:
                     djumps += djumps_esperados - djumps_por_cristais
                     djumps_por_cristais = djumps_esperados
