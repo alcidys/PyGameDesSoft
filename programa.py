@@ -11,6 +11,7 @@ LARGURA_TELA, ALTURA_TELA = 800, 600
 LARGURA_MUNDO = 90000
 CHAO_Y = 500
 ALTURA_CHAO = 100
+musica = pygame.mixer.Sound('assets/Random/jungle-explorer-video-game-theme-141773.ogg')
 
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Plataforma")
@@ -40,8 +41,8 @@ fonte = pygame.font.SysFont(None, 40)
 
 # Personagens
 personagens_disponiveis = [
-    pygame.transform.scale(pygame.image.load("assets/Herondina.png").convert_alpha(), (50, 50)),
-    pygame.transform.scale(pygame.image.load("assets/Mariana.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Random/Herondina.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Random/Mariana.png").convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load("assets/Soldier_1/Attack.png").convert_alpha(), (50, 50)),
 ]
 #carrega os cristais que seram gerados
@@ -91,12 +92,12 @@ def tela_selecao_personagem():
 tela_selecao_personagem()
 
 #carrega os sprites do plano de fundo e do chão
-cenario0_img = pygame.transform.scale(pygame.image.load("assets/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-cenario1_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 1.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-cenario2_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 2.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-cenario3_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 3.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-cenario4_img = pygame.transform.scale(pygame.image.load("assets/FUNDO 4.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
-chao_img = pygame.transform.scale(pygame.image.load("assets/CHÃO.png").convert_alpha(), (LARGURA_TELA, ALTURA_CHAO))
+cenario0_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario1_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDO 1.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario2_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDO 2.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario3_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDO 3.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+cenario4_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDO 4.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
+chao_img = pygame.transform.scale(pygame.image.load("assets/Random/CHÃO.png").convert_alpha(), (LARGURA_TELA, ALTURA_CHAO))
 #separa os sprites do cenario para animação do background
 camadas = [
     {"img": cenario0_img, "offset": 0, "vel": 0.2},
@@ -134,6 +135,8 @@ camera_x = 0
 rodando = True
 #loop principal que roda o jogo
 while rodando:
+    #roda a musica
+    musica.play()
     #set no clock para 60FPS
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
