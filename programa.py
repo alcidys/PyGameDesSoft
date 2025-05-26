@@ -12,6 +12,8 @@ LARGURA_MUNDO = 90000
 CHAO_Y = 500
 ALTURA_CHAO = 100
 musica = pygame.mixer.Sound('assets/Random/jungle-explorer-video-game-theme-141773.ogg')
+pulinho = pygame.mixer.Sound('assets/Random/video-game-jump-soundeffect-37532.ogg')
+pega = pygame.mixer.Sound('assets/Random/snd_fragment_retrievewav-14728.ogg')
 
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Plataforma")
@@ -31,10 +33,10 @@ gravidade = 1
 pulo = -20
 no_chao = True
 vidas = 5
-djumps = 0
 vidas_extra_por_cristais = 0
 djumps_por_cristais = 0
 cristais_coletados = 0
+djumps = cristais_coletados
 
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
@@ -133,10 +135,13 @@ for i in range(300):
 #set da camera e condição para rodar o jogo
 camera_x = 0
 rodando = True
+
+#roda a musica
+musica.set_volume(1)
+musica.play()
+
 #loop principal que roda o jogo
 while rodando:
-    #roda a musica
-    musica.play()
     #set no clock para 60FPS
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
@@ -154,7 +159,7 @@ while rodando:
 
 
     for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
+        if evento.type == pygame.QUIT or evento.type == pygame.K_BACKSPACE:
             rodando = False
         if evento.type == pygame.KEYDOWN:
             if (evento.key == pygame.K_SPACE or evento.key == pygame.K_UP):
@@ -162,6 +167,7 @@ while rodando:
                     vel_y = pulo
                 if no_chao == False and djumps>0:
                     vel_y = pulo
+                    pulinho.play()
                     djumps-=1
                     cristais_coletados-=1
                 no_chao = False
@@ -239,6 +245,7 @@ while rodando:
                 if jogador.colliderect(cristal_rect):
                     obs["coletado"] = True
                     cristais_coletados += 1
+                    pega.play()
                 vidas_esperadas = cristais_coletados // 10
                 if vidas_esperadas > vidas_extra_por_cristais:
                     vidas += vidas_esperadas - vidas_extra_por_cristais
