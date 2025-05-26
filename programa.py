@@ -45,9 +45,9 @@ fonte = pygame.font.SysFont(None, 40)
 personagens_disponiveis = [
     pygame.transform.scale(pygame.image.load("assets/Random/Herondina.png").convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load("assets/Random/Mariana.png").convert_alpha(), (50, 50)),
-    pygame.transform.scale(pygame.image.load("assets/Soldier_1/Attack.png").convert_alpha(), (50, 50)),
+    pygame.transform.scale(pygame.image.load("assets/Random/Jarina.png").convert_alpha(), (50, 50)),
 ]
-#carrega os cristais que seram gerados
+#carrega os cristais que serao gerados
 cristal = [
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50, 50)),
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_03_violet.png').convert_alpha(), (50, 50)),
