@@ -41,12 +41,62 @@ djumps = cristais_coletados
 # Fonte
 fonte = pygame.font.SysFont(None, 40)
 
-# Personagens
-personagens_disponiveis = [
-    pygame.transform.scale(pygame.image.load("assets/Random/Herondina.png").convert_alpha(), (50, 50)),
-    pygame.transform.scale(pygame.image.load("assets/Random/Mariana.png").convert_alpha(), (50, 50)),
-    pygame.transform.scale(pygame.image.load("assets/Random/Jarina.png").convert_alpha(), (50, 50)),
-]
+# Classe para personagem animado apenas com a animação de correr
+class PersonagemAnimado:
+    def __init__(self, pos_x, pos_y, spritesheet, n_frames):
+        self.x = pos_x
+        self.y = pos_y
+        self.n_frames = n_frames
+
+        # Carregar a spritesheet de corrida
+        sprite_sheet = pygame.image.load(spritesheet).convert_alpha()
+        largura_sheet, altura_sheet = sprite_sheet.get_size()
+        largura_frame = largura_sheet // n_frames
+
+        # Dividir a spritesheet em frames individuais
+        self.frames = []
+        for i in range(n_frames):
+            frame = sprite_sheet.subsurface((i * largura_frame, 0, largura_frame, altura_sheet))
+            self.frames.append(frame)
+
+        # Estado inicial
+        self.frame_index = 0
+        self.tempo_ultimo_frame = pygame.time.get_ticks()
+        self.intervalo_frame = 100  # milissegundos entre frames
+
+        self.largura = largura_frame
+        self.altura = altura_sheet
+
+    def atualizar_animacao(self):
+        tempo_atual = pygame.time.get_ticks()
+        if tempo_atual - self.tempo_ultimo_frame > self.intervalo_frame:
+            self.frame_index = (self.frame_index + 1) % self.n_frames
+            self.tempo_ultimo_frame = tempo_atual
+
+    def desenhar(self, surface, camera_x=0, x_jogador=None, y_jogador=None):
+        # Se passar a posição do jogador, desenha nela para seguir o jogador
+        frame = self.frames[self.frame_index]
+        if x_jogador is not None and y_jogador is not None:
+            surface.blit(frame, (x_jogador - camera_x, y_jogador - self.altura))
+        else:
+            surface.blit(frame, (self.x - camera_x, self.y))
+
+
+# Criando personagens animados
+personagem1 = PersonagemAnimado(
+    pos_x=0, pos_y=CHAO_Y - 50,
+    spritesheet='assets/Samurai_Archer/Run.png',
+    n_frames=8
+)
+
+personagem2 = PersonagemAnimado(
+    pos_x=0, pos_y=CHAO_Y - 50,
+    spritesheet='assets/Knight_2/Run.png',
+    n_frames=7
+)
+
+personagens_disponiveis = [personagem1, personagem2]
+
 #carrega os cristais que serao gerados
 cristal = [
     pygame.transform.scale(pygame.image.load('assets/Cristais/crystal_02_blue.png').convert_alpha(), (50, 50)),
@@ -63,6 +113,7 @@ cristal = [
 personagem_escolhido = None
 
 #defina a função para criar a tela de seleção
+# Função para criar a tela de seleção
 def tela_selecao_personagem():
     global personagem_escolhido
     selecionando = True
@@ -77,20 +128,22 @@ def tela_selecao_personagem():
                 sys.exit()
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
-                for i in range(3):
+                for i in range(len(personagens_disponiveis)):
                     rect = pygame.Rect(200 + i * 150, 200, 50, 50)
                     if rect.collidepoint(mx, my):
                         personagem_escolhido = personagens_disponiveis[i]
                         selecionando = False
 
-        for i, img in enumerate(personagens_disponiveis):
+        for i, personagem in enumerate(personagens_disponiveis):
             x = 200 + i * 150
-            tela.blit(img, (x, 200))
+            # Para mostrar o primeiro frame de cada personagem
+            tela.blit(personagem.frames[0], (x, 200))
             pygame.draw.rect(tela, (255, 255, 255), (x, 200, 50, 50), 2)
 
         pygame.display.flip()
         clock.tick(60)
-#cria a tela de seleção
+
+# Executa tela de seleção
 tela_selecao_personagem()
 
 #carrega os sprites do plano de fundo e do chão
@@ -141,11 +194,13 @@ musica.set_volume(1)
 musica.play()
 
 #loop principal que roda o jogo
+# loop principal que roda o jogo
 while rodando:
-    #set no clock para 60FPS
+    # set no clock para 60FPS
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
-    #cria o fundo com animação e o chão
+
+    # cria o fundo com animação e o chão
     for camada in camadas:
         camada["offset"] -= camada["vel"]
         camada["vel"] += 0.0002
@@ -157,7 +212,6 @@ while rodando:
     for x in range(0, LARGURA_MUNDO, LARGURA_TELA):
         tela.blit(chao_img, (x - camera_x, CHAO_Y))
 
-
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT or evento.type == pygame.K_BACKSPACE:
             rodando = False
@@ -165,23 +219,24 @@ while rodando:
             if (evento.key == pygame.K_SPACE or evento.key == pygame.K_UP):
                 if no_chao == True:
                     vel_y = pulo
-                if no_chao == False and djumps>0:
+                if no_chao == False and djumps > 0:
                     vel_y = pulo
                     pulinho.play()
-                    djumps-=1
-                    cristais_coletados-=1
+                    djumps -= 1
+                    cristais_coletados -= 1
                 no_chao = False
 
-    #leitura de comando e consequencias
+    # leitura de comando e consequências
     teclas = pygame.key.get_pressed()
     vel_x = 0
     if teclas[pygame.K_LEFT]:
         vel_x = -7
     if teclas[pygame.K_RIGHT]:
         vel_x = 7
-    
+
     jogador.x += vel_x
-    #define o tipo do cristal gerado
+
+    # define o tipo do cristal gerado
     for obs in obstaculos:
         rect = obs["rect"]
         if obs["tipo"] == "normal" and jogador.colliderect(rect):
@@ -189,12 +244,13 @@ while rodando:
                 jogador.right = rect.left
             elif vel_x < 0:
                 jogador.left = rect.right
-    #Graviodade e verificação se o jogador pode pular ou não
+
+    # Gravidade e verificação se o jogador pode pular ou não
     vel_y += gravidade
     jogador.y += vel_y
     no_chao = False
 
-    #tratamento de colisão
+    # tratamento de colisão
     for obs in obstaculos:
         rect = obs["rect"]
         if jogador.colliderect(rect):
@@ -219,7 +275,6 @@ while rodando:
             if obs["tipo"] == "dano":
                 obs["causou_dano"] = False
 
-
     if jogador.bottom >= CHAO_Y:
         jogador.bottom = CHAO_Y
         vel_y = 0
@@ -228,11 +283,17 @@ while rodando:
     camera_x = jogador.x - LARGURA_TELA // 2
     camera_x = max(0, min(camera_x, LARGURA_MUNDO - LARGURA_TELA))
 
-    #'desenha' o personagem escolhido na tela
+    # anima e desenha o personagem escolhido
     if personagem_escolhido:
-        tela.blit(personagem_escolhido, (jogador.x - camera_x, jogador.bottom - personagem_escolhido.get_height()))
+        personagem_escolhido.atualizar_animacao()
+        personagem_escolhido.desenhar(
+            tela,
+            camera_x=camera_x,
+            x_jogador=jogador.x,
+            y_jogador=jogador.bottom
+        )
 
-    #gera os obstaculos conforme a posição do jogador
+    # gera os obstáculos conforme a posição do jogador
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
@@ -250,12 +311,12 @@ while rodando:
                 if vidas_esperadas > vidas_extra_por_cristais:
                     vidas += vidas_esperadas - vidas_extra_por_cristais
                     vidas_extra_por_cristais = vidas_esperadas
-                djumps_esperados = cristais_coletados//1
+                djumps_esperados = cristais_coletados // 1
                 if djumps_esperados > djumps_por_cristais:
                     djumps += djumps_esperados - djumps_por_cristais
                     djumps_por_cristais = djumps_esperados
 
-    #'desenha o HUD na tela
+    # desenha o HUD na tela
     pontuacao = jogador.x // 10
     texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
     tela.blit(texto, (10, 10))
