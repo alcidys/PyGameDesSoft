@@ -163,27 +163,49 @@ camadas = [
 ]
 #cria os obstaculos
 obstaculos = []
+ultimos_tipos = []  # Controla os últimos dois tipos ("normal" ou "dano")
+
 for i in range(300):
     tentativas = 0
     sucesso = False
+
     while not sucesso and tentativas < 100:
         x = random.randint(300, LARGURA_MUNDO - 300)
-        largura = random.choice([50, 100, 150])
+        largura = random.choice([100])
         altura = 20
         y = random.randint(300, CHAO_Y - 40)
-        tipo = random.choice(["normal", "dano"])
-        novo_rect = pygame.Rect(x, y, largura, altura)
-        sucesso = True
-        for obs in obstaculos:
-            if novo_rect.colliderect(obs["rect"]):
-                sucesso = False
-                break
-        if tipo == "dano":
-            sucesso = True
+
+        # Evita 3 "dano" seguidos
+        if ultimos_tipos[-2:] == ["dano", "dano"]:
+            tipo = "normal"
+        else:
+            tipo = random.choice(["normal", "dano"])
+
+        # Novo retângulo com margem de 20 px
+        novo_rect = pygame.Rect(x - 20, y - 20, largura + 40, altura + 40)
+
+        # Verifica se há sobreposição (com margem)
+        sucesso = all(not novo_rect.colliderect(
+            obs["rect"].inflate(40, 40)) for obs in obstaculos)
+
         tentativas += 1
+
     if sucesso:
-        cristal_id = randint(0, 4) if tipo == "normal" else None
-        obstaculos.append({"rect": novo_rect, "tipo": tipo, "causou_dano": False, "cristal": cristal_id, "coletado": False})
+        # Rect original (sem margem extra)
+        final_rect = pygame.Rect(x, y, largura, altura)
+        cristal_id = random.randint(0, 4) if tipo == "normal" else None
+
+        obstaculos.append({
+            "rect": final_rect,
+            "tipo": tipo,
+            "causou_dano": False,
+            "cristal": cristal_id,
+            "coletado": False
+        })
+
+        # Atualiza o histórico de tipos
+        ultimos_tipos.append(tipo)
+
 
 #set da camera e condição para rodar o jogo
 camera_x = 0
