@@ -96,11 +96,18 @@ personagem2 = PersonagemAnimado(
 
 personagens_disponiveis = [personagem1, personagem2]
 
+cupuacu = PersonagemAnimado(
+    pos_x = random.randint(1000, LARGURA_MUNDO - 100),
+    pos_y = CHAO_Y - 100,
+    spritesheet='assets/Random/Animacao Cupuacu.png',
+    n_frames=7
+)
+
+cupuacu_rect = pygame.Rect(cupuacu.x, cupuacu.y, cupuacu.largura, cupuacu.altura)
+
 # obstasculos
 obstaculo_contato = pygame.transform.scale(pygame.image.load('assets/Random/OBSTACULO.png').convert_alpha(), (100, 20))
 obstaculo_dano = pygame.transform.scale(pygame.image.load('assets/Random/OBSTACULO DANO.png').convert_alpha(), (100, 20))
-
-
 
 #carrega os cristais que serao gerados
 cristal = [
@@ -117,7 +124,6 @@ cristal = [
 ]
 personagem_escolhido = None
 
-#defina a função para criar a tela de seleção
 # Função para criar a tela de seleção
 def tela_selecao_personagem():
     global personagem_escolhido
@@ -221,7 +227,6 @@ musica.set_volume(1)
 musica.play()
 
 #loop principal que roda o jogo
-# loop principal que roda o jogo
 while rodando:
     # set no clock para 60FPS
     dt = clock.tick(60)
@@ -327,6 +332,19 @@ while rodando:
             x_jogador=jogador.x,
             y_jogador=jogador.bottom
         )
+
+    # Atualiza animação do cupuacu
+        cupuacu.atualizar_animacao()
+
+        # Atualiza rect do cupuacu
+        cupuacu_rect.topleft = (cupuacu.x, cupuacu.y)
+
+        # Desenha o cupuacu (ajustando posição com a câmera)
+        cupuacu.desenhar(tela, camera_x=camera_x, x_jogador=cupuacu.x, y_jogador=cupuacu.y + cupuacu.altura)
+
+        # Verifica colisão entre jogador e cupuacu para capturar
+        if jogador.colliderect(cupuacu_rect):
+            rodando = False  # termina o jogo quando capturado
 
     # gera os obstáculos conforme a posição do jogador
     
