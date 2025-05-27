@@ -81,7 +81,6 @@ class PersonagemAnimado:
         else:
             surface.blit(frame, (self.x - camera_x, self.y))
 
-
 # Criando personagens animados
 personagem1 = PersonagemAnimado(
     pos_x=0, pos_y=CHAO_Y - 50,
@@ -96,6 +95,12 @@ personagem2 = PersonagemAnimado(
 )
 
 personagens_disponiveis = [personagem1, personagem2]
+
+# obstasculos
+obstaculo_contato = pygame.transform.scale(pygame.image.load('assets/Random/OBSTACULO.png').convert_alpha(), (100, 20))
+obstaculo_dano = pygame.transform.scale(pygame.image.load('assets/Random/OBSTACULO DANO.png').convert_alpha(), (100, 20))
+
+
 
 #carrega os cristais que serao gerados
 cristal = [
@@ -222,32 +227,6 @@ while rodando:
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
 
-    # cria o fundo com animação e o chão
-    for camada in camadas:
-        camada["offset"] -= camada["vel"]
-        camada["vel"] += 0.0002
-    for camada in camadas:
-        largura_img = camada["img"].get_width()
-        x = camada["offset"] % largura_img
-        for i in range(-1, LARGURA_TELA // largura_img + 2):
-            tela.blit(camada["img"], (x + i * largura_img, 0))
-    for x in range(0, LARGURA_MUNDO, LARGURA_TELA):
-        tela.blit(chao_img, (x - camera_x, CHAO_Y))
-
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT or evento.type == pygame.K_BACKSPACE:
-            rodando = False
-        if evento.type == pygame.KEYDOWN:
-            if (evento.key == pygame.K_SPACE or evento.key == pygame.K_UP):
-                if no_chao == True:
-                    vel_y = pulo
-                if no_chao == False and djumps > 0:
-                    vel_y = pulo
-                    pulinho.play()
-                    djumps -= 1
-                    cristais_coletados -= 1
-                no_chao = False
-
     # leitura de comando e consequências
     teclas = pygame.key.get_pressed()
     vel_x = 0
@@ -256,7 +235,41 @@ while rodando:
     if teclas[pygame.K_RIGHT]:
         vel_x = 7
 
+    # movimenta o personagem
     jogador.x += vel_x
+
+    # cria o fundo com paralaxe (movimenta apenas se personagem se mover)
+    if vel_x != 0:
+        for camada in camadas:
+            camada["offset"] -= vel_x * camada["vel"]
+            # você pode deixar esse incremento se quiser aceleração com o tempo
+            # camada["vel"] += 0.0002
+
+    # desenha as camadas de fundo
+    for camada in camadas:
+        largura_img = camada["img"].get_width()
+        x = camada["offset"] % largura_img
+        for i in range(-1, LARGURA_TELA // largura_img + 2):
+            tela.blit(camada["img"], (x + i * largura_img, 0))
+
+    # desenha o chão
+    for x in range(0, LARGURA_MUNDO, LARGURA_TELA):
+        tela.blit(chao_img, (x - camera_x, CHAO_Y))
+
+    # eventos
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT or evento.type == pygame.K_BACKSPACE:
+            rodando = False
+        if evento.type == pygame.KEYDOWN:
+            if (evento.key == pygame.K_SPACE or evento.key == pygame.K_UP):
+                if no_chao == True:
+                    vel_y = pulo
+                elif djumps > 0:
+                    vel_y = pulo
+                    pulinho.play()
+                    djumps -= 1
+                    cristais_coletados -= 1
+                no_chao = False
 
     # define o tipo do cristal gerado
     for obs in obstaculos:
@@ -316,11 +329,12 @@ while rodando:
         )
 
     # gera os obstáculos conforme a posição do jogador
+    
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
-            cor = VERMELHO if obs["tipo"] == "dano" else PRETO
-            pygame.draw.rect(tela, cor, (rect.x - camera_x, rect.y, rect.width, rect.height))
+            imagem_obstaculo = obstaculo_dano if obs["tipo"] == "dano" else obstaculo_contato
+            tela.blit(imagem_obstaculo, (rect.x - camera_x, rect.y))
 
             if obs["tipo"] == "normal" and obs["cristal"] is not None and not obs["coletado"]:
                 cristal_rect = pygame.Rect(rect.x + rect.width // 2 - 25, rect.y - 50, 50, 50)
