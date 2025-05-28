@@ -16,3 +16,8 @@ Colete o máximo de cristais e percorra a maior distancia para a direita para ac
 blocos floridos são plataformas com cristais e blocos com espinhos e cristais são plataformas que causam dano ao enconstar
 
 link do video:
+
+
+Fontes:
+Chat GPT, usado principalmente para busca e correções de erros no código. Usado para: corrigir os sistemas de pulo duplo, coleta de cristais, recuperação de vida por cristais e geração de cristais.
+Também foi usado como consulta para geração das telas e para gerar a imagem do cupuaçu.
