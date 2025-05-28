@@ -2,7 +2,6 @@ import pygame
 import sys
 import random
 from random import randint
-
 pygame.init()
 pygame.mixer.init()
 
@@ -192,10 +191,62 @@ def tela_informacoes():
         pygame.display.flip()
         clock.tick(60)
 
-
-
 # Executa tela de seleção
 tela_selecao_personagem()
+
+imagem_contexto = pygame.image.load("assets/Telas/contexto.jpeg")
+imagem_contexto = pygame.transform.scale(imagem_contexto, (LARGURA_TELA, ALTURA_TELA))
+def tela_contexto():
+    imagem_contexto = pygame.image.load("assets/Telas/contexto.jpeg")
+    imagem_contexto = pygame.transform.scale(imagem_contexto, (LARGURA_TELA, ALTURA_TELA))
+   
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_contexto, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif evento.type == pygame.KEYDOWN:
+                mostrando = False  # Sai da tela de contexto ao pressionar qualquer tecla
+       
+        pygame.display.flip()
+        clock.tick(60)
+
+imagem_vitoria = pygame.image.load("assets/Telas/venceu.jpeg")
+imagem_vitoria = pygame.transform.scale(imagem_vitoria, (LARGURA_TELA, ALTURA_TELA))
+def tela_vitoria():
+    imagem_vitoria = pygame.image.load("assets/Telas/venceu.jpeg")
+    imagem_vitoria = pygame.transform.scale(imagem_vitoria, (LARGURA_TELA, ALTURA_TELA))
+   
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_vitoria, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+       
+        pygame.display.flip()
+        clock.tick(60)
+
+imagem_derrota = pygame.image.load("assets/Telas/fim de jogo.jpeg")
+imagem_derrota = pygame.transform.scale(imagem_derrota, (LARGURA_TELA, ALTURA_TELA))
+def tela_derrota():
+    imagem_derrota = pygame.image.load("assets/Telas/fim de jogo.jpeg")
+    imagem_derrota = pygame.transform.scale(imagem_derrota, (LARGURA_TELA, ALTURA_TELA))
+   
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_derrota, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+       
+        pygame.display.flip()
+        clock.tick(60)
+
 
 #carrega os sprites do plano de fundo e do chão
 cenario0_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
@@ -267,6 +318,7 @@ musica.set_volume(1)
 musica.play()
 
 #loop principal que roda o jogo
+tela_contexto()
 while rodando:
     # set no clock para 60FPS
     dt = clock.tick(60)
@@ -418,6 +470,13 @@ while rodando:
     tela.blit(texto_cristais, (10, 80))
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
+   
+    # define a tela de ganho ou de perda:
+
+    if jogador.colliderect(cupuacu_rect):
+        tela_vitoria()
+    elif vidas <= 0:
+        tela_derrota()
 
     pygame.display.flip()
 
