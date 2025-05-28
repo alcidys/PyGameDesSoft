@@ -2,7 +2,6 @@ import pygame
 import sys
 import random
 from random import randint
-
 pygame.init()
 pygame.mixer.init()
 
@@ -127,11 +126,33 @@ personagem_escolhido = None
 # Função para criar a tela de seleção
 def tela_selecao_personagem():
     global personagem_escolhido
+
+    # Carrega e ajusta a imagem de fundo
+    imagem_fundo = pygame.image.load("assets/Telas/inicio.jpeg")
+    imagem_fundo = pygame.transform.scale(imagem_fundo, (LARGURA_TELA, ALTURA_TELA))
+
     selecionando = True
+
+    botoes = []
+    textos_botoes = [" ", " ", "Informações"]
+    mapa_escolhas = [1, 0, None]  # None para o botão de informações
+
+    for i in range(len(textos_botoes)):
+        if i < 2:
+            # Botões de seleção lado a lado
+            x = LARGURA_TELA // 2 - 250 + i * 300
+            y = ALTURA_TELA // 2 + 115
+        else:
+            # Botão de informações abaixo dos outros
+            x = LARGURA_TELA // 2 - 125  # Centralizado
+            y = ALTURA_TELA // 2 + 200
+
+        largura = 250
+        altura = 50
+        botoes.append(pygame.Rect(x, y, largura, altura))
+
     while selecionando:
-        tela.fill((30, 30, 30))
-        titulo = fonte.render("Escolha seu personagem", True, (255, 255, 255))
-        tela.blit(titulo, (LARGURA_TELA // 2 - titulo.get_width() // 2, 50))
+        tela.blit(imagem_fundo, (0, 0))
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -139,23 +160,92 @@ def tela_selecao_personagem():
                 sys.exit()
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
-                for i in range(len(personagens_disponiveis)):
-                    rect = pygame.Rect(200 + i * 150, 200, 50, 50)
-                    if rect.collidepoint(mx, my):
-                        personagem_escolhido = personagens_disponiveis[i]
-                        selecionando = False
-
-        for i, personagem in enumerate(personagens_disponiveis):
-            x = 200 + i * 150
-            # Para mostrar o primeiro frame de cada personagem
-            tela.blit(personagem.frames[0], (x, 200))
-            pygame.draw.rect(tela, (255, 255, 255), (x, 200, 50, 50), 2)
+                for i, botao in enumerate(botoes):
+                    if botao.collidepoint(mx, my):
+                        if textos_botoes[i] == "Informações":
+                            tela_informacoes()  # Chama a tela de informações
+                        else:
+                            personagem_escolhido = personagens_disponiveis[mapa_escolhas[i]]
+                            selecionando = False
 
         pygame.display.flip()
         clock.tick(60)
 
-# Executa tela de seleção
-tela_selecao_personagem()
+# Função para exibir a tela de informações
+def tela_informacoes():
+    informacoes_img = pygame.image.load("assets/Telas/como jogar.jpeg")
+    informacoes_img = pygame.transform.scale(informacoes_img, (LARGURA_TELA, ALTURA_TELA))
+
+    mostrando = True
+    while mostrando:
+        tela.blit(informacoes_img, (0, 0))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_x:
+                    mostrando = False  # Volta para a tela de seleção
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+
+imagem_contexto = pygame.image.load("assets/Telas/contexto.jpeg")
+imagem_contexto = pygame.transform.scale(imagem_contexto, (LARGURA_TELA, ALTURA_TELA))
+def tela_contexto():
+    imagem_contexto = pygame.image.load("assets/Telas/contexto.jpeg")
+    imagem_contexto = pygame.transform.scale(imagem_contexto, (LARGURA_TELA, ALTURA_TELA))
+    
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_contexto, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif evento.type == pygame.KEYDOWN:
+                mostrando = False  # Sai da tela de contexto ao pressionar qualquer tecla
+        
+        pygame.display.flip()
+        clock.tick(60)
+
+imagem_vitoria = pygame.image.load("assets/Telas/venceu.jpeg")
+imagem_vitoria = pygame.transform.scale(imagem_vitoria, (LARGURA_TELA, ALTURA_TELA))
+def tela_vitoria():
+    imagem_vitoria = pygame.image.load("assets/Telas/venceu.jpeg")
+    imagem_vitoria = pygame.transform.scale(imagem_vitoria, (LARGURA_TELA, ALTURA_TELA))
+    
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_vitoria, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        pygame.display.flip()
+        clock.tick(60)
+
+imagem_derrota = pygame.image.load("assets/Telas/fim de jogo.jpeg")
+imagem_derrota = pygame.transform.scale(imagem_derrota, (LARGURA_TELA, ALTURA_TELA))
+def tela_derrota():
+    imagem_derrota = pygame.image.load("assets/Telas/fim de jogo.jpeg")
+    imagem_derrota = pygame.transform.scale(imagem_derrota, (LARGURA_TELA, ALTURA_TELA))
+    
+    mostrando = True
+    while mostrando:
+        tela.blit(imagem_derrota, (0, 0))
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        pygame.display.flip()
+        clock.tick(60)
+
 
 #carrega os sprites do plano de fundo e do chão
 cenario0_img = pygame.transform.scale(pygame.image.load("assets/Random/FUNDAO.png").convert_alpha(), (LARGURA_TELA, ALTURA_TELA))
@@ -217,6 +307,16 @@ for i in range(300):
         # Atualiza o histórico de tipos
         ultimos_tipos.append(tipo)
 
+def espera_tecla():
+    esperando = True
+    while esperando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if evento.type == pygame.KEYDOWN:
+                esperando = False
+        pygame.time.wait(10)
 
 #set da camera e condição para rodar o jogo
 camera_x = 0
@@ -226,7 +326,11 @@ rodando = True
 musica.set_volume(1)
 musica.play()
 
+# Executa tela de seleção
+tela_selecao_personagem()
+
 #loop principal que roda o jogo
+tela_contexto()
 while rodando:
     # set no clock para 60FPS
     dt = clock.tick(60)
@@ -378,6 +482,19 @@ while rodando:
     tela.blit(texto_cristais, (10, 80))
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
+    
+    # define a tela de ganho ou de perda:
+
+    if jogador.colliderect(cupuacu_rect):
+        tela_vitoria()
+        espera_tecla()
+        tela_selecao_personagem()
+        break  # ou return, se o loop estiver dentro de uma função
+    elif vidas <= 0:
+        tela_derrota()
+        espera_tecla()
+        tela_selecao_personagem()
+        break  # ou return
 
     pygame.display.flip()
 

@@ -7,7 +7,7 @@ pygame.mixer.init()
 
 # Configurações
 LARGURA_TELA, ALTURA_TELA = 800, 600
-LARGURA_MUNDO = 90000
+LARGURA_MUNDO = 8000
 CHAO_Y = 500
 ALTURA_CHAO = 100
 musica = pygame.mixer.Sound('assets/Random/jungle-explorer-video-game-theme-141773.ogg')
@@ -267,7 +267,7 @@ camadas = [
 obstaculos = []
 ultimos_tipos = []  # Controla os últimos dois tipos ("normal" ou "dano")
 
-for i in range(300):
+for i in range(25):
     tentativas = 0
     sucesso = False
 
@@ -315,11 +315,12 @@ rodando = True
 
 #roda a musica
 musica.set_volume(1)
-musica.play()
+musica.play(-1)
 
 #loop principal que roda o jogo
 tela_contexto()
 while rodando:
+    
     # set no clock para 60FPS
     dt = clock.tick(60)
     tela.fill((0, 0, 0))
@@ -470,15 +471,14 @@ while rodando:
     tela.blit(texto_cristais, (10, 80))
     for i in range(vidas):
         pygame.draw.rect(tela, VERMELHO, (10 + i * 30, 50, 20, 20))
-   
+    
+    pygame.display.flip()
+    
     # define a tela de ganho ou de perda:
-
     if jogador.colliderect(cupuacu_rect):
         tela_vitoria()
     elif vidas <= 0:
-        tela_derrota()
-
-    pygame.display.flip()
+        tela_derrota()  
 
 #encerra o jogo
 pygame.quit()
