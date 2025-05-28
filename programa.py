@@ -135,12 +135,19 @@ def tela_selecao_personagem():
     selecionando = True
 
     botoes = []
-    textos_botoes = [" ", " "]
-    mapa_escolhas = [1, 0]  
+    textos_botoes = [" ", " ", "Informações"]
+    mapa_escolhas = [1, 0, None]  # None para o botão de informações
 
     for i in range(len(textos_botoes)):
-        x = LARGURA_TELA // 2 - 250 + i * 300
-        y = ALTURA_TELA // 2  + 115
+        if i < 2:
+            # Botões de seleção lado a lado
+            x = LARGURA_TELA // 2 - 250 + i * 300
+            y = ALTURA_TELA // 2 + 115
+        else:
+            # Botão de informações abaixo dos outros
+            x = LARGURA_TELA // 2 - 125  # Centralizado
+            y = ALTURA_TELA // 2 + 200
+
         largura = 250
         altura = 50
         botoes.append(pygame.Rect(x, y, largura, altura))
@@ -156,11 +163,35 @@ def tela_selecao_personagem():
                 mx, my = pygame.mouse.get_pos()
                 for i, botao in enumerate(botoes):
                     if botao.collidepoint(mx, my):
-                        personagem_escolhido = personagens_disponiveis[mapa_escolhas[i]]
-                        selecionando = False
+                        if textos_botoes[i] == "Informações":
+                            tela_informacoes()  # Chama a tela de informações
+                        else:
+                            personagem_escolhido = personagens_disponiveis[mapa_escolhas[i]]
+                            selecionando = False
 
         pygame.display.flip()
         clock.tick(60)
+
+# Função para exibir a tela de informações
+def tela_informacoes():
+    informacoes_img = pygame.image.load("assets/Telas/como jogar.jpeg")
+    informacoes_img = pygame.transform.scale(informacoes_img, (LARGURA_TELA, ALTURA_TELA))
+
+    mostrando = True
+    while mostrando:
+        tela.blit(informacoes_img, (0, 0))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_x:
+                    mostrando = False  # Volta para a tela de seleção
+
+        pygame.display.flip()
+        clock.tick(60)
+
 
 
 # Executa tela de seleção
