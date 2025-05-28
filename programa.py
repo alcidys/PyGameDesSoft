@@ -135,7 +135,7 @@ def tela_selecao_personagem():
 
     botoes = []
     textos_botoes = [" ", " ", "Informações"]
-    mapa_escolhas = [1, 0, None]  # None para o botão de informações
+    mapa_escolhas = [1, 0, None]  
 
     for i in range(len(textos_botoes)):
         if i < 2:
@@ -144,7 +144,7 @@ def tela_selecao_personagem():
             y = ALTURA_TELA // 2 + 115
         else:
             # Botão de informações abaixo dos outros
-            x = LARGURA_TELA // 2 - 125  # Centralizado
+            x = LARGURA_TELA // 2 - 125  
             y = ALTURA_TELA // 2 + 200
 
         largura = 250
@@ -340,8 +340,6 @@ while rodando:
     if vel_x != 0:
         for camada in camadas:
             camada["offset"] -= vel_x * camada["vel"]
-            # você pode deixar esse incremento se quiser aceleração com o tempo
-            # camada["vel"] += 0.0002
 
     # desenha as camadas de fundo
     for camada in camadas:
