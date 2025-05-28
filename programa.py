@@ -127,11 +127,26 @@ personagem_escolhido = None
 # Função para criar a tela de seleção
 def tela_selecao_personagem():
     global personagem_escolhido
+
+    # Carrega e ajusta a imagem de fundo
+    imagem_fundo = pygame.image.load("assets/Telas/inicio.jpeg")
+    imagem_fundo = pygame.transform.scale(imagem_fundo, (LARGURA_TELA, ALTURA_TELA))
+
     selecionando = True
+
+    botoes = []
+    textos_botoes = [" ", " "]
+    mapa_escolhas = [1, 0]  
+
+    for i in range(len(textos_botoes)):
+        x = LARGURA_TELA // 2 - 250 + i * 300
+        y = ALTURA_TELA // 2  + 115
+        largura = 250
+        altura = 50
+        botoes.append(pygame.Rect(x, y, largura, altura))
+
     while selecionando:
-        tela.fill((30, 30, 30))
-        titulo = fonte.render("Escolha seu personagem", True, (255, 255, 255))
-        tela.blit(titulo, (LARGURA_TELA // 2 - titulo.get_width() // 2, 50))
+        tela.blit(imagem_fundo, (0, 0))
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -139,20 +154,14 @@ def tela_selecao_personagem():
                 sys.exit()
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
-                for i in range(len(personagens_disponiveis)):
-                    rect = pygame.Rect(200 + i * 150, 200, 50, 50)
-                    if rect.collidepoint(mx, my):
-                        personagem_escolhido = personagens_disponiveis[i]
+                for i, botao in enumerate(botoes):
+                    if botao.collidepoint(mx, my):
+                        personagem_escolhido = personagens_disponiveis[mapa_escolhas[i]]
                         selecionando = False
-
-        for i, personagem in enumerate(personagens_disponiveis):
-            x = 200 + i * 150
-            # Para mostrar o primeiro frame de cada personagem
-            tela.blit(personagem.frames[0], (x, 200))
-            pygame.draw.rect(tela, (255, 255, 255), (x, 200, 50, 50), 2)
 
         pygame.display.flip()
         clock.tick(60)
+
 
 # Executa tela de seleção
 tela_selecao_personagem()
@@ -347,7 +356,7 @@ while rodando:
             rodando = False  # termina o jogo quando capturado
 
     # gera os obstáculos conforme a posição do jogador
-    
+   
     for obs in obstaculos:
         rect = obs["rect"]
         if rect.right > camera_x and rect.left < camera_x + LARGURA_TELA:
